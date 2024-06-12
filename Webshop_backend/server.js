@@ -1,105 +1,136 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const bodyParser = require('body-parser');
 const cors = require('cors');
+const { Pool } = require('pg');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+//const { jwtSecret } = require('./config.js')
+const jwtSecret 
+='41cc361b3f9ee6d6c955b5f68c5e6bb28750a1b064ff7739e81ca426d320112d';
 const app = express();
 const port = 3000;
 
-// Enable CORS for all routes
-app.use(cors());
+app.use(bodyParser.json());
+app.use(cors({
+  origin: 'http://localhost:4200',
+  }));
 
-// Middleware to parse JSON bodies
-app.use(express.json());
+ const db = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'webshop',
+  password: 'DatabaseSec321@',
+  port: 5432,
+});
 
-// Create or open an SQLite database
-const db = new sqlite3.Database('./mydatabase.db', (err) => {
+app.post('/api/register', async (req, res) => {
+  const { username, password, email } = req.body;
+  if (!username || !password || !email) {
+    return res.status(400).send('Username, password, and email are required');
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  console.log(hashedPassword)
+  try {
+    const result = await db.query(
+      'INSERT INTO users (username, password, email) VALUES ($1, $2, $3) RETURNING *',
+      [username, hashedPassword, email]
+    );
+    res.status(201).send(result.rows[0]);
+  } catch (error) {
+    console.error('Error registering user:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+// User login
+app.post('/api/login', (req, res) => {
+  const { password, username } = req.body;
+
+  // Find the user in the database
+  const query = 'SELECT * FROM users WHERE username = $1';
+  db.query(query, [username], (err, results) => {
     if (err) {
-        console.error(err.message);
+      return res.status(500).json({ error: err });
     }
-    console.log('Connected to the SQLite database.');
+
+    if (results.rows.length === 0) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    const user = results.rows[0];
+
+    // Compare the password
+    bcrypt.compare(password, user.password, (err, isMatch) => {
+      if (err) {
+        return res.status(500).json({ error: err });
+      }
+
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid username or password' });
+      }
+      
+      // Generate a token
+      const token = jwt.sign({ id: user.id, username: user.username }, jwtSecret, { expiresIn: '1h' });
+      res.json({ message: 'Login successful', token, user: { id: user.id, username: user.username, email: user.email } }); 
+    });
+  });
 });
 
-// Create a products table if it doesn't exist
-db.run(`PRAGMA foreign_keys = off;
-BEGIN TRANSACTION;
 
--- Table: products
-CREATE TABLE products (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL, description VARCHAR, type VARCHAR NOT NULL, price INTEGER, stockcount INTEGER, imageUrl VARCHAR);
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (2, 'Call of duty WW2', NULL, 'game', 30, 8, './assets/call-of-duty-WWII-ps4-box.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (3, 'Crash Bandicoot Trilogy', NULL, 'game', 40, 10, './assets/crash-nsane-ps4-box.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (4, 'Crash Team Racing', NULL, 'game', 40, 3, './assets/Ctr-ps4-box.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (5, 'Sniper elite 3', NULL, 'game', 30, 12, './assets/Sniper-elite-3-ps4-box.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (6, 'Tekken 7', NULL, 'game', 50, 40, './assets/Tekken7-ps4-box.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (7, 'Rocket League', NULL, 'game', 40, 9, './assets/rocket-league-ps4-box.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (8, 'Overwatch', NULL, 'game', 40, 4, './assets/Overwatch-ps4-box.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (9, 'Dragonball FighterZ', NULL, 'game', 60, 9001, './assets/dragonball-fighterZ-ps4-box.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (10, 'Grand theft auto V', NULL, 'game', 60, 6, './assets/GTA-V-ps4-box.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (11, 'Hitman', NULL, 'game', 40, 19, './assets/hitman-full-season-ps4-box.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (12, 'Hitman 2', NULL, 'game', 60, 47, './assets/Hitman-2-ps4-box.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (13, 'Mortal Kombat XL', NULL, 'game', 50, 15, './assets/Mortal-Kombat-XL-ps4-box.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (14, 'Redbull', NULL, 'drink', 2.5, 11, './assets/Redbull-single.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (15, 'Monster-energy', NULL, 'drink', 2.5, 77, './assets/Monster-energy.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (16, 'Doritos bits red', NULL, 'snack', 1, 33, './assets/doritos-bits-honey-bbq.png');
-INSERT INTO products (id, name, description, type, price, stockcount, imageUrl) VALUES (17, 'Doritos bits blue', NULL, 'snack', 1, 44, './assets/doritos-bits-sweet-paprika.png');
+// Middleware to protect routes
+const authenticateJWT = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
 
-COMMIT TRANSACTION;
-PRAGMA foreign_keys = on;
+  if (token) {
+    jwt.verify(token, jwtSecret, (err, user) => {
+      if (err) {
+        return res.sendStatus(403);
+      }
+      req.user = user;
+      next();
+    });
+  } else {
+    res.sendStatus(401);
+  }
+};
 
-)`);
+// Protected route example
+app.get('/api/protected', authenticateJWT, (req, res) => {
+  res.json({ message: 'This is a protected route', user: req.user });
+});
+
+// Define other routes
 app.get('/', (req, res) => {
-  res.send('Welcome to my webshop!'); // Send a welcome message
-});
-// Endpoint to get all products
-app.get('/products', (req, res) => {
-    const sql = 'SELECT * FROM products';
-    db.all(sql, [], (err, rows) => {
-        if (err) {
-            res.status(400).json({ error: err.message });
-            return;
-        }
-        res.json({
-            message: 'success',
-            data: rows
-        });
-    });
+  res.send('Welcome to my webshop backend!');
 });
 
-app.get('/products/:productId', (req, res) => {
-    const productId = req.params.productId; // Retrieve the product ID from the URL
-    const sql = 'SELECT * FROM products WHERE id = ?'; // SQL query to select a product by ID
-    db.get(sql, [productId], (err, row) => {
-        if (err) {
-            res.status(400).json({ error: err.message });
-            return;
-        }
-        if (!row) {
-            res.status(404).json({ error: 'Product not found' });
-            return;
-        }
-        res.json({
-            message: 'success',
-            data: row
-        });
-    });
+app.get('/api/products', (req, res) => {
+  db.query('SELECT * FROM products', (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err });
+    }
+    res.json(results.rows);
+  });
 });
 
-// Endpoint to add a new product
-app.post('/products', (req, res) => {
-    const { id, name, description, type, price, stockcount, imageUrl } = req.body;
-    const sql = 'INSERT INTO products (name, price) VALUES (?, ?)';
-    db.run(sql, [id, name, description, type, price, stockcount, imageUrl], function(err) {
-        if (err) {
-            res.status(400).json({ error: err.message });
-            return;
-        }
-        res.json({
-            message: 'success',
-            data: { id: this.id, name, description, type, price, stockcount, imageUrl }
-        });
-    });
+app.get('/api/products/:id', (req, res) => {
+  db.query('SELECT * FROM products WHERE id = {id}', (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err });
+    }
+    res.json(results.rows);
+  });
+});
+//remove 111 -> 118 only for dbug
+db.query('SELECT * FROM users', (err, res) => {
+  if (err) {
+    console.error('Error executing query:', err);
+  } else {
+    console.log('Query result:', res.rows);
+  }
 });
 
 // Start the server
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
-
