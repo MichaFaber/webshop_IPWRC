@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const fs = require('fs')
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -15,7 +16,7 @@ app.use(cors({
   origin: 'http://localhost:4200',
   }));
 
- const db = new Pool({
+const db = new Pool({
   user: 'postgres',
   host: 'localhost',
   database: 'webshop',
@@ -23,18 +24,18 @@ app.use(cors({
   port: 5432,
 });
 
+// Register new user
 app.post('/api/register', async (req, res) => {
-  const { username, password, email } = req.body;
-  if (!username || !password || !email) {
+  const { username, password, email, role} = req.body;
+  if (!username || !password || !email|| !role) {
     return res.status(400).send('Username, password, and email are required');
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  console.log(hashedPassword)
   try {
     const result = await db.query(
-      'INSERT INTO users (username, password, email) VALUES ($1, $2, $3) RETURNING *',
-      [username, hashedPassword, email]
+      'INSERT INTO users (username, password, email, role) VALUES ($1, $2, $3, $4) RETURNING *',
+      [username, hashedPassword, email, role]
     );
     res.status(201).send(result.rows[0]);
   } catch (error) {
@@ -71,7 +72,7 @@ app.post('/api/login', (req, res) => {
       
       // Generate a token
       const token = jwt.sign({ id: user.id, username: user.username }, jwtSecret, { expiresIn: '1h' });
-      res.json({ message: 'Login successful', token, user: { id: user.id, username: user.username, email: user.email } }); 
+      res.json({ message: 'Login successful', token, user: { id: user.id, username: user.username, email: user.email, role: user.role } }); 
     });
   });
 });
@@ -99,13 +100,22 @@ app.get('/api/protected', authenticateJWT, (req, res) => {
   res.json({ message: 'This is a protected route', user: req.user });
 });
 
-// Define other routes
 app.get('/', (req, res) => {
   res.send('Welcome to my webshop backend!');
 });
 
+// Get all products
 app.get('/api/products', (req, res) => {
-  db.query('SELECT * FROM products', (err, results) => {
+  const type = req.query.type;
+  let query = 'SELECT * FROM products';
+  const queryParams = [];
+
+  if (type) {
+    query += ' WHERE type = $1';
+    queryParams.push(type);
+  }
+
+  db.query(query, queryParams, (err, results) => {
     if (err) {
       return res.status(500).json({ error: err });
     }
@@ -113,14 +123,128 @@ app.get('/api/products', (req, res) => {
   });
 });
 
+// Get a single product
 app.get('/api/products/:id', (req, res) => {
-  db.query('SELECT * FROM products WHERE id = {id}', (err, results) => {
+  const productId = req.params.id;
+  db.query(`SELECT * FROM products WHERE id = ${[productId]}`, (err, results) => {
     if (err) {
       return res.status(500).json({ error: err });
     }
-    res.json(results.rows);
+    if (results.rows.length === 0) {
+      return res.status(404).json({error: 'Product not found'})
+    }
+    res.json(results.rows[0]);
   });
 });
+// create a new product
+app.post('/api/products/create', (req, res) => {
+  console.log('bd',req.body)
+  const { name, description, type, price, amountinstock, imageurl } = req.body;
+
+  if (!name || !description || !type || isNaN(price) || isNaN(amountinstock) || !imageurl) {
+    return res.status(400).json({ error: 'Invalid product data' });
+  }
+
+  const query = 'INSERT INTO products (name, description, type, price, amountinstock, imageurl) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
+  const values = [name, description, type, price, amountinstock, imageurl];
+
+  db.query(query, values, (err, result) => {
+    if (err) {
+      console.error('Error inserting product:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.status(201).json(result.rows[0]);
+  });
+});
+
+// Update a single product
+app.put('/api/products/:id', (req, res) => {
+  const productId = req.params.id;
+  const { name, description, price, amountinstock, imageurl } = req.body;
+
+  if (amountinstock < 0) {
+    return res.status(400).json({error: 'Invalid number of stock'})
+  }
+
+  const query = 'UPDATE products SET name = $1, description = $2, price = $3, amountInStock = $4, imageUrl = $5 WHERE id = $6';
+  const values = [name, description, price, amountinstock, imageurl, productId];
+
+  db.query(query, values, (err, result) => {
+    if (err) {
+      console.error('Error updating product:', err);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+
+    res.json({ message: 'Product updated successfully' });
+  });
+});
+
+//Delete a single product
+app.delete('/api/products/delete/:id', (req, res) => {
+  const productId = req.params.id;
+  const query = `DELETE from products WHERE id =  ${[productId]}`;
+  
+  db.query(query,(err, result) => {
+    if (err) {
+      console.error('Error updating product:', err);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+
+    res.json({ message: 'Product successfully deleted' });
+  });
+});
+
+//checkout the shoppingcart items
+app.post('/api/checkout', async (req, res) => {
+  const items = req.body.items;
+  
+  if (!Array.isArray(items) || items.some(item => typeof item.product.id !== 'number' || typeof item.quantity !== 'number')) {
+    return res.status(400).json({ error: 'Invalid items format' });
+  }
+
+  try {
+    await db.query('BEGIN'); // Start a transaction
+
+    const boughtItems = [];
+
+    for (const item of items) {
+      const { product, quantity } = item;
+      const id = product.id;
+
+      if (isNaN(id) || isNaN(quantity) || quantity <= 0) {
+        throw new Error(`Invalid id or quantity for item with id ${id}`);
+      }
+
+      const result = await db.query('SELECT * FROM products WHERE id = $1', [id]);
+
+      if (result.rows.length === 0) {
+        throw new Error(`Product with id ${id} not found`);
+      }
+
+      const newQuantity = result.rows[0].amountinstock - quantity;
+      if (newQuantity < 0) {
+        throw new Error(`Not enough stock for product with id ${id}`);
+      }
+
+      await db.query('UPDATE products SET amountinstock = $1 WHERE id = $2', [newQuantity, id]);
+
+      boughtItems.push({
+        ...result.rows[0],
+        quantity
+      });
+    }
+
+    await db.query('COMMIT'); // Commit the transaction
+    res.status(200).json({ message: 'Checkout successful', boughtItems });
+  } catch (error) {
+    await db.query('ROLLBACK'); // Rollback the transaction in case of error
+    console.error('Checkout error:', error);
+    res.status(500).json({ error: 'Checkout failed', details: error.message });
+  }
+});
+
+
+
 //remove 111 -> 118 only for dbug
 db.query('SELECT * FROM users', (err, res) => {
   if (err) {
