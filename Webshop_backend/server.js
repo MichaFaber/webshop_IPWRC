@@ -2,6 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const fs = require('fs')
+const fileUpload = require('express-fileupload')
+const path = require('path')
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -11,10 +13,16 @@ const jwtSecret
 const app = express();
 const port = 3000;
 
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+app.use(fileUpload());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(bodyParser.json());
 app.use(cors({
   origin: 'http://localhost:4200',
-  }));
+}));
 
 const db = new Pool({
   user: 'postgres',
@@ -43,6 +51,7 @@ app.post('/api/register', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
 // User login
 app.post('/api/login', (req, res) => {
   const { password, username } = req.body;
@@ -76,7 +85,6 @@ app.post('/api/login', (req, res) => {
     });
   });
 });
-
 
 // Middleware to protect routes
 const authenticateJWT = (req, res, next) => {
@@ -136,24 +144,35 @@ app.get('/api/products/:id', (req, res) => {
     res.json(results.rows[0]);
   });
 });
-// create a new product
-app.post('/api/products/create', (req, res) => {
-  console.log('bd',req.body)
-  const { name, description, type, price, amountinstock, imageurl } = req.body;
 
-  if (!name || !description || !type || isNaN(price) || isNaN(amountinstock) || !imageurl) {
-    return res.status(400).json({ error: 'Invalid product data' });
+// Create a new product
+app.post('/api/products/create', (req, res) => {
+  const { name, description, type, price, amountinstock } = req.body;
+  if (!req.files || !req.files.image) {
+    return res.status(400).json({ error: 'Image file is required' });
   }
 
-  const query = 'INSERT INTO products (name, description, type, price, amountinstock, imageurl) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
-  const values = [name, description, type, price, amountinstock, imageurl];
+  const imageFile = req.files.image;
+  const uploadPath = path.join(__dirname, 'uploads', imageFile.name);
 
-  db.query(query, values, (err, result) => {
+  imageFile.mv(uploadPath, err => {
     if (err) {
-      console.error('Error inserting product:', err);
-      return res.status(500).json({ error: 'Database error' });
+      console.error('Error saving file:', err);
+      return res.status(500).json({ error: 'Failed to upload file' });
     }
-    res.status(201).json(result.rows[0]);
+
+    const imageurl = `http://localhost:3000/uploads/${imageFile.name}`;
+
+    const query = 'INSERT INTO products (name, description, type, price, amountinstock, imageurl) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
+    const values = [name, description, type, price, amountinstock, imageurl];
+
+    db.query(query, values, (err, result) => {
+      if (err) {
+        console.error('Error inserting product:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.status(201).json(result.rows[0]);
+    });
   });
 });
 
@@ -174,7 +193,6 @@ app.put('/api/products/:id', (req, res) => {
       console.error('Error updating product:', err);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
-
     res.json({ message: 'Product updated successfully' });
   });
 });
@@ -203,8 +221,7 @@ app.post('/api/checkout', async (req, res) => {
   }
 
   try {
-    await db.query('BEGIN'); // Start a transaction
-
+    await db.query('BEGIN'); // Start transaction
     const boughtItems = [];
 
     for (const item of items) {
@@ -216,7 +233,6 @@ app.post('/api/checkout', async (req, res) => {
       }
 
       const result = await db.query('SELECT * FROM products WHERE id = $1', [id]);
-
       if (result.rows.length === 0) {
         throw new Error(`Product with id ${id} not found`);
       }
@@ -227,7 +243,6 @@ app.post('/api/checkout', async (req, res) => {
       }
 
       await db.query('UPDATE products SET amountinstock = $1 WHERE id = $2', [newQuantity, id]);
-
       boughtItems.push({
         ...result.rows[0],
         quantity
@@ -240,17 +255,6 @@ app.post('/api/checkout', async (req, res) => {
     await db.query('ROLLBACK'); // Rollback the transaction in case of error
     console.error('Checkout error:', error);
     res.status(500).json({ error: 'Checkout failed', details: error.message });
-  }
-});
-
-
-
-//remove 111 -> 118 only for dbug
-db.query('SELECT * FROM users', (err, res) => {
-  if (err) {
-    console.error('Error executing query:', err);
-  } else {
-    console.log('Query result:', res.rows);
   }
 });
 
