@@ -27,7 +27,7 @@ export class ProductPageComponent implements OnInit {
   }
 
   fetchProduct(id: number): void {
-    const url = `http://localhost:3000/api/products/${id}`;
+    const url = `/backend/api/products/${id}`;
     this.http.get<Product>(url).subscribe(data => {
       this.product = data;
     }, error => {

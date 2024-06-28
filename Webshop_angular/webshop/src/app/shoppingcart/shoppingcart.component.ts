@@ -44,7 +44,7 @@ export class ShoppingCartComponent implements OnInit {
   }
 
   checkout(): void {
-  const checkoutUrl = 'http://localhost:3000/api/checkout';
+  const checkoutUrl = '/backend/api/checkout';
   const items = this.cartItems.map(item => ({
     product: { id: item.product.id },
     quantity: item.quantity

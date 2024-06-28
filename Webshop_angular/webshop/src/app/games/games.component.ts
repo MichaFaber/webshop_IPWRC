@@ -34,7 +34,7 @@ export class GamesComponent implements OnInit {
   }
 
   fetchProducts(): void {
-    const url = 'http://localhost:3000/api/products?type=Game'
+    const url = '/backend/api/products?type=Game'
     this.http.get<Product[]>(url).subscribe(data => {
       this.products = data;
     }, error => {

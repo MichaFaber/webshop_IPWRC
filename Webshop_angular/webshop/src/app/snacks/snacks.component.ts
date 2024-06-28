@@ -34,7 +34,7 @@ export class SnacksComponent implements OnInit {
   }
 
   fetchProducts(): void {
-    const url = 'http://localhost:3000/api/products?type=Snack';
+    const url = '/backend/api/products?type=Snack';
     this.http.get<Product[]>(url).subscribe(data => {
       this.products = data;
     }, error => {

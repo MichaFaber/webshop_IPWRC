@@ -33,7 +33,7 @@ export class DrinksComponent implements OnInit {
   }
 
   fetchProducts(): void {
-    const url = 'http://localhost:3000/api/products?type=Drink';
+    const url = '/backend/api/products?type=Drink';
     this.http.get<Product[]>(url).subscribe(data => {
       this.products = data;
     }, error => {
