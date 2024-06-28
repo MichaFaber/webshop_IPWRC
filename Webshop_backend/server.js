@@ -51,7 +51,7 @@ app.post('/api/register', async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   try {
     const result = await db.query(
-      'INSERT INTO users (username, password, email, role) VALUES ($1, $2, $3, $4) RETURNING *',
+      'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?) RETURNING *',
       [username, hashedPassword, email, role]
     );
     res.status(201).send(result.rows[0]);
@@ -66,7 +66,7 @@ app.post('/api/login', (req, res) => {
   const { password, username } = req.body;
 
   // Find the user in the database
-  const query = 'SELECT * FROM users WHERE username = $1';
+  const query = 'SELECT * FROM users WHERE username = ?';
   db.query(query, [username], (err, results) => {
     if (err) {
       return res.status(500).json({ error: err });
@@ -128,7 +128,7 @@ app.get('/api/products', (req, res) => {
   const queryParams = [];
 
   if (type) {
-    query += ' WHERE type = $1';
+    query += ' WHERE type = ?';
     queryParams.push(type);
   }
 
@@ -173,7 +173,7 @@ app.post('/api/products/create', (req, res) => {
 
     const imageurl = `http://localhost:3000/uploads/${imageFile.name}`;
 
-    const query = 'INSERT INTO products (name, description, type, price, amountinstock, imageurl) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
+    const query = 'INSERT INTO products (name, description, type, price, amountinstock, imageurl) VALUES (?, ?, ?, ?, ?, ?) RETURNING *';
     const values = [name, description, type, price, amountinstock, imageurl];
 
     db.query(query, values, (err, result) => {
@@ -195,7 +195,7 @@ app.put('/api/products/:id', (req, res) => {
     return res.status(400).json({error: 'Invalid number of stock'})
   }
 
-  const query = 'UPDATE products SET name = $1, description = $2, price = $3, amountInStock = $4, imageUrl = $5 WHERE id = $6';
+  const query = 'UPDATE products SET name = ?, description = ?, price = ?, amountInStock = ?, imageUrl = ? WHERE id = ?';
   const values = [name, description, price, amountinstock, imageurl, productId];
 
   db.query(query, values, (err, result) => {
@@ -242,7 +242,7 @@ app.post('/api/checkout', async (req, res) => {
         throw new Error(`Invalid id or quantity for item with id ${id}`);
       }
 
-      const result = await db.query('SELECT * FROM products WHERE id = $1', [id]);
+      const result = await db.query('SELECT * FROM products WHERE id = ?', [id]);
       if (result.rows.length === 0) {
         throw new Error(`Product with id ${id} not found`);
       }
@@ -252,7 +252,7 @@ app.post('/api/checkout', async (req, res) => {
         throw new Error(`Not enough stock for product with id ${id}`);
       }
 
-      await db.query('UPDATE products SET amountinstock = $1 WHERE id = $2', [newQuantity, id]);
+      await db.query('UPDATE products SET amountinstock = ? WHERE id = ?', [newQuantity, id]);
       boughtItems.push({
         ...result.rows[0],
         quantity
