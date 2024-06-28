@@ -6,6 +6,8 @@ const fileUpload = require('express-fileupload')
 const path = require('path')
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
+const helmet = require('helmet')
+const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 //const { jwtSecret } = require('./config.js')
 const jwtSecret 
@@ -20,9 +22,16 @@ if (!fs.existsSync(uploadsDir)) {
 app.use(fileUpload());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(bodyParser.json());
+app.use(helmet());
 app.use(cors({
   origin: 'http://localhost:4200',
 }));
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
 
 const db = new Pool({
   user: 'postgres',
