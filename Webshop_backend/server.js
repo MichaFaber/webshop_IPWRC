@@ -54,7 +54,7 @@ app.post('/api/register', async (req, res) => {
       'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?) RETURNING *',
       [username, hashedPassword, email, role]
     );
-    res.status(201).send(result.rows[0]);
+    res.status(201).send(result[0]);
   } catch (error) {
     console.error('Error registering user:', error);
     res.status(500).send('Internal Server Error');
@@ -72,11 +72,11 @@ app.post('/api/login', (req, res) => {
       return res.status(500).json({ error: err });
     }
 
-    if (results.rows.length === 0) {
+    if (results.length === 0) {
       return res.status(401).json({ message: 'Invalid username or password' });
     }
 
-    const user = results.rows[0];
+    const user = results[0];
 
     // Compare the password
     bcrypt.compare(password, user.password, (err, isMatch) => {
@@ -148,10 +148,10 @@ app.get('/api/products/:id', (req, res) => {
     if (err) {
       return res.status(500).json({ error: err });
     }
-    if (results.rows.length === 0) {
+    if (results.length === 0) {
       return res.status(404).json({error: 'Product not found'})
     }
-    res.json(results.rows[0]);
+    res.json(results[0]);
   });
 });
 
@@ -181,7 +181,7 @@ app.post('/api/products/create', (req, res) => {
         console.error('Error inserting product:', err);
         return res.status(500).json({ error: 'Database error' });
       }
-      res.status(201).json(result.rows[0]);
+      res.status(201).json(result[0]);
     });
   });
 });
@@ -243,18 +243,18 @@ app.post('/api/checkout', async (req, res) => {
       }
 
       const result = await db.query('SELECT * FROM products WHERE id = ?', [id]);
-      if (result.rows.length === 0) {
+      if (result.length === 0) {
         throw new Error(`Product with id ${id} not found`);
       }
 
-      const newQuantity = result.rows[0].amountinstock - quantity;
+      const newQuantity = result[0].amountinstock - quantity;
       if (newQuantity < 0) {
         throw new Error(`Not enough stock for product with id ${id}`);
       }
 
       await db.query('UPDATE products SET amountinstock = ? WHERE id = ?', [newQuantity, id]);
       boughtItems.push({
-        ...result.rows[0],
+        ...result[0],
         quantity
       });
     }
