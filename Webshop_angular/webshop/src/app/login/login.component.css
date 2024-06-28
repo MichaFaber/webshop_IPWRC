@@ -1,0 +1,25 @@
+.login-container {
+    display: flex;
+    flex-direction: column ;
+    margin-bottom: 2vw;
+    justify-content: flex-start;
+    padding-left: 30vw;
+    padding-top: 10vh;
+    background-color: azure;
+    height: 80vh;
+}
+.login-container input {
+    margin-bottom: 10px; 
+}
+.login-button {
+    height: min-content;
+    border-radius: 5px;
+    background-color: #c2d3fd;
+    align-self: flex-start;
+    border: none;
+    padding: 0.5em;
+    cursor: pointer;
+}
+.login-button:hover {
+    background-color: #e4eafa;
+}

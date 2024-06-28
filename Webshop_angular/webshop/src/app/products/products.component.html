@@ -1,0 +1,16 @@
+<div class="product-container">
+  <div class="product-card" *ngFor="let product of products">
+    <h3>{{ product.name }}</h3>
+    <a (click)="viewProductDetails(product.id)"><img [src]="product.imageurl" alt="{{ product.name }}"></a>
+    <p>{{ product.description }}</p>
+    <p>Type: {{ product.type }}</p>
+    <p>Prijs: €{{ product.price }}</p>
+    <p>In voorraad: {{ product.amountinstock }}</p>
+    <button 
+      class="winkelmand-btn" 
+      (click)="addToCart(product)" 
+      [disabled]="product.amountinstock <= 0">
+      In winkelmandje <i class="fas fa-shopping-cart"></i>
+    </button>
+  </div>
+</div>

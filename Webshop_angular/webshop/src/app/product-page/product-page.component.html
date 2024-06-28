@@ -1,0 +1,24 @@
+<div class="product-container">
+  <div class="product-card" *ngIf="product">      
+    <div class="content-container">
+      <div class="image-container">
+        <div *ngIf="product.amountinstock !==0 "><img [src]="product.imageurl" alt="{{ product.name }}"></div>
+        <div *ngIf="product.amountinstock === 0"><img [src]="outOfStock" alt="{{ product.name }}"></div>
+      </div>
+      <div class="product-details">
+        <div class="product-detail"><h3>{{ product.name }}</h3></div>
+        <div class="product-detail">Omschrijving: {{ product.description }}</div>
+        <div class="product-detail">Type: {{ product.type }}</div>
+        <div class="product-detail">Prijs: ${{ product.price }}</div>
+        <div class="product-detail">Op voorraad: {{ product.amountinstock }}</div>
+        <button class="winkelmand-btn" (click)="addToCart(product)" [disabled]="product.amountinstock === 0">
+            In winkelmandje <i class="fas fa-shopping-cart"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="!product">
+    <p>Laden van de product details...</p>
+  </div>
+</div>
+  

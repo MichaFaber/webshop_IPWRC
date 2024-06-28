@@ -1,0 +1,24 @@
+<div class="nav_box">
+    <div class="pages_nav">
+        <nav>
+            <ul>
+                <li><a routerLink="/">Home</a></li>
+                <li><a routerLink="/games">Games</a></li>
+                <li><a routerLink="/snacks">Snacks</a></li>
+                <li><a routerLink="/drinks">Drinken</a></li>
+                <li><div *ngIf="authService.isAdmin()"> <a routerLink="/admin" class="admin-option">Admin pagina</a></div></li>
+            </ul>
+        </nav>
+    </div>
+    <div class="login_box">
+        <nav>
+            <ul>
+                <li><div class="user-name" *ngIf="username"> {{ username }}</div></li>
+                <li><a routerLink="/winkelmandje">Winkelmandje</a></li>
+                <li><a routerLink="/login" *ngIf="!authService.isAuthenticated()">Login</a></li>
+                <li><a routerLink="/register" *ngIf="!authService.isAuthenticated()">Register</a></li>
+                <li><a (click)="logout()" *ngIf="authService.isAuthenticated()">Logout</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>

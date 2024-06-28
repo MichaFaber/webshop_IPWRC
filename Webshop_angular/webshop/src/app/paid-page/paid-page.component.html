@@ -1,0 +1,7 @@
+<div class="receipt-container">
+  <h2>Aankoopbewijs</h2>
+  <div *ngIf="useremail">
+    <div *ngIf="username"> Bedankt voor je aankoop, {{username}}</div>
+    <div  *ngIf="useremail">Het aankoopbewijs is verzonden naar: <span class="email"> {{ useremail }}</span></div>
+  </div>
+</div>

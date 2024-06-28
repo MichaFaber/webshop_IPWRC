@@ -1,0 +1,12 @@
+.receipt-container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+.email{
+    font-weight: bold;
+    font-size: 16px;
+}

@@ -1,0 +1,18 @@
+<div class="cart-container">
+  <div class="title">Winkelmandje <i class="fas fa-shopping-cart"></i></div>
+  <div class="empty-cart" *ngIf="cartItems.length === 0">Uw winkelmandje is leeg.</div>
+  <div *ngFor="let item of cartItems">
+    <div class="cart-item">
+      <h3>{{ item.product.name }}</h3>
+      <p>Prijs: €{{ item.product.price }}</p>
+      <p>Aantal stuks: {{ item.quantity }}</p>
+      <p>Totaal bedrag: €{{ item.product.price * item.quantity }}</p>
+      <button class="remove-item-button" (click)="removeFromCart(item.product)">Verwijder uit winkelmandje</button>
+    </div>
+  </div>
+  <div *ngIf="cartItems.length > 0">
+    <div class="total-costs"><h3>Totaal: €{{ getTotal() }}</h3></div>
+    <button class="emptycart-button" role="button"><span class="text" (click)="clearCart()">Winkelmandje leegmaken</span></button>
+    <button class="buy-button" role="button"><span class="text" (click)="checkout()">Items kopen</span></button>
+  </div>
+</div>

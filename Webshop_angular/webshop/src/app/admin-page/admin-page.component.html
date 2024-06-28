@@ -1,0 +1,74 @@
+<div *ngIf="authService.isAdmin()">
+    <div class="title-box">
+      <h1>Admin pagina</h1>
+      <button class="overview-product-button" (click)="showSection('overview')">Overzicht producten</button>
+      <button class="new-product-button" (click)="showSection('create')">+ Nieuw product</button>
+    </div>
+    <div *ngIf="currentSection === 'overview'">
+      <div class="product-line" *ngFor="let product of products" >
+        <div class="title"><h3>{{ product.name }}</h3></div>
+        <div class="product-container">
+          <div class="product-details">
+            <p>Naam</p>
+            <input class="input-field" [(ngModel)]="product.name" placeholder="Name">
+          </div>
+          <div class="product-details">
+            <p>Beschrijving</p>
+            <input class="input-field" [(ngModel)]="product.description" placeholder="Description">
+          </div>
+          <div class="product-details">
+            <p>Prijs</p>
+            <input class="input-field" [(ngModel)]="product.price" type="number"min="0" placeholder="Price">
+          </div>
+          <div class="product-details">
+            <p>Op voorraad</p>
+            <input class="input-field" [(ngModel)]="product.amountinstock" type="number" placeholder="amountinstock">
+          </div>
+          <div class="product-details">
+            <p>Afbeeldings URL</p>
+            <input class="input-field" [(ngModel)]="product.imageurl" type="string" placeholder="imageurl">
+          </div>
+          <button class="update-product-button" (click)="updateProduct(product)">Update</button>
+          <button class="delete-product-button" (click)="deleteProduct(product)">Delete</button>
+        </div>
+      </div>
+    </div>
+</div>
+<div *ngIf="currentSection === 'create'">
+  <div class="form-container">
+    <h3>Voeg nieuw product toe</h3>
+    <form class="product-form" (ngSubmit)="createProduct()" enctype="multipart/form-data">
+      <div class="form-input">
+        <label>Naam: <input [(ngModel)]="newProduct.name" name="name" required></label>
+      </div>
+      <div class="form-input">
+        <label>Type:
+          <input list="productTypes" [(ngModel)]="newProduct.type" name="type" required>
+          <datalist id="productTypes">
+            <option value="Game"></option>
+            <option value="Snack"></option>
+            <option value="Drink"></option>
+          </datalist>
+        </label>
+      </div>
+      <div class="form-input">
+        <label>Prijs: <input type="number" [(ngModel)]="newProduct.price" name="price" min="0" required></label>
+      </div>
+      <div class="form-input">
+        <label>In voorraad: <input type="number" [(ngModel)]="newProduct.amountinstock" name="amountinstock" min="0" required></label>
+      </div>
+      <div class="form-input">
+        <label>Beschrijving: <textarea [(ngModel)]="newProduct.description" name="description" required></textarea></label>
+      </div>
+      <div class="form-input" id="filename">
+        <label>Afbeelding: <input type="file" (change)="onFileChange($event)" name="image" required></label>
+      </div>
+        <button class="form-button" type="submit">Voeg product toe</button>
+    </form>
+  </div>
+</div>
+
+<div *ngIf="!authService.isAdmin()">
+  <p>Toegang geweigerd.</p>
+</div>
+  

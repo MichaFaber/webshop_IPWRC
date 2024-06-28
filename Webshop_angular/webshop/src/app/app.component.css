@@ -1,0 +1,27 @@
+.toolbar {
+    width: 100vw;
+    height: 20vh;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    z-index: 1;
+}
+.content {
+    width: 100vw;
+    height: 60vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.footer {
+    width: 100vw;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: row-reverse;
+    margin-right: 20%;
+}
+.app-root{
+    width: 100vw;
+    height: 100vh;
+}

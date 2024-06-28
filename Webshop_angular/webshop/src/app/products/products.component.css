@@ -1,0 +1,64 @@
+.product-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px; 
+  justify-content: center;
+  padding: 16px; 
+}
+.product-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  padding: 16px;
+  text-align: center;
+  flex: 1 1 calc(25% - 32px); 
+  max-width: calc(25% - 32px);
+  box-sizing: border-box; 
+}
+.product-card img {
+  width: auto;
+  max-height: 200px; 
+  display: block;
+  margin: 0 auto 16px; 
+}
+.product-card h2 {
+  font-size: 1.25rem;
+  margin-bottom: 8px;
+}
+.product-card p {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+.winkelmand-btn {
+  height: min-content;
+  border-radius: 5px;
+  background-color: #29eb69;
+  align-self: center;
+  margin-left: 2%;
+  border: none;
+  padding: 0.5em;
+  cursor: pointer;
+}
+.winkelmand-btn:hover {
+  background-color: #9ef5bb;
+}
+@media (max-width: 1200px) {
+  .product-card {
+    flex: 1 1 calc(33.333% - 32px); /* medium screens 3 columns*/
+    max-width: calc(33.333% - 32px);
+  }
+}
+@media (max-width: 900px) {
+  .product-card {
+    flex: 1 1 calc(50% - 32px); /* small screens 2 columns*/
+    max-width: calc(50% - 32px);
+  }
+}
+@media (max-width: 600px) {
+  .product-card {
+    flex: 1 1 100%; /* extra small screens 1 column*/
+    max-width: 100%;
+  }
+}
