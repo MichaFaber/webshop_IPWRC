@@ -4,7 +4,7 @@ const cors = require('cors');
 const fs = require('fs')
 const fileUpload = require('express-fileupload')
 const path = require('path')
-const { Pool } = require('pg');
+const mysql = require('mysql2')
 const bcrypt = require('bcryptjs');
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit');
@@ -22,23 +22,23 @@ if (!fs.existsSync(uploadsDir)) {
 app.use(fileUpload());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(bodyParser.json());
-app.use(helmet());
-app.use(cors({
-  origin: 'http://localhost:4200',
-}));
+//app.use(helmet());
+//app.use(cors({  origin: '*',}));
+//app.use(cors());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100 // limit each IP to 100 requests per windowMs
 });
-app.use(limiter);
+//app.use(limiter);
 
 
-const db = new Pool({
-  user: 'postgres',
+const db = mysql.createPool({
+  user: 'webshop',
   host: 'localhost',
   database: 'webshop',
-  password: 'DatabaseSec321@',
-  port: 5432,
+  password: 'webshop',
+  port: 3306,
+  connectionLimit: 10,
 });
 
 // Register new user
@@ -136,9 +136,10 @@ app.get('/api/products', (req, res) => {
     if (err) {
       return res.status(500).json({ error: err });
     }
-    res.json(results.rows);
+    res.json(results);
   });
 });
+
 
 // Get a single product
 app.get('/api/products/:id', (req, res) => {
