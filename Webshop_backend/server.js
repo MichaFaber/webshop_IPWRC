@@ -51,14 +51,15 @@ app.post('/api/register', (req, res) => {
   bcrypt.hash(password, 10).then(
     (hashedPassword) => {
       console.log(hashedPassword)
-      db.query(
+      try {
+        db.query(
         'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?);',
         [username, hashedPassword, email, role],
-      (result, error)  => {
-        console.log(result, error)
-        res.status(201).send(result[0]);
-        } 
-      );  
+        ); 
+        res.status(200).send("ok")
+      } catch (error) {
+        console.log(error)  
+      }
     }
   );
   
