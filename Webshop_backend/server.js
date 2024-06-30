@@ -186,7 +186,7 @@ app.post('/api/products/create', (req, res) => {
         console.error('Error inserting product:', err);
         return res.status(500).json({ error: 'Database error' });
       }
-      console.log(result)
+      console.log(result);
       res.status(201).json(result[0]);
     });
   });
