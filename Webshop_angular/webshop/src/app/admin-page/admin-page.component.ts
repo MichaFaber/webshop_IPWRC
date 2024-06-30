@@ -83,7 +83,7 @@ export class AdminPageComponent implements OnInit {
           console.log('Product created:', product);
           this.fetchProducts();
           this.clearForm();
-          this.router.navigate(['login'])
+          this.router.navigate(['admin'])
         },
         error => {
           console.error('Error creating product:', error);
