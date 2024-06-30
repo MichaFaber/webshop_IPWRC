@@ -46,7 +46,6 @@ app.post('/api/register', (req, res) => {
 
   bcrypt.hash(password, 10).then(
     (hashedPassword) => {
-      console.log(hashedPassword)
       try {
         db.query(
         'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?);',

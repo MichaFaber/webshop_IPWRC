@@ -48,7 +48,6 @@ export class AdminPageComponent implements OnInit {
     this.productService.updateProduct(product).subscribe(
       () => {
         this.notificationService.showNotification(`${product.name} is succesvol aangepast`);
-        console.log(`${product.name} updated successfully`);
       },
       error => {
         this.notificationService.showNotification(`Error bij het aanpassen van: ${product.name}: ${error.error.error}`);
