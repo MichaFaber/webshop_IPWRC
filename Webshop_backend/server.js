@@ -177,7 +177,7 @@ app.post('/api/products/create', (req, res) => {
 
     const imageurl = `/uploads/${imageFile.name}`;
 
-    const query = 'INSERT INTO products (name, description, type, price, amountinstock, imageurl) VALUES (?, ?, ?, ?, ?, ?) RETURNING *';
+    const query = 'INSERT INTO products (name, description, type, price, amountinstock, imageurl) VALUES (?, ?, ?, ?, ?, ?);';
     const values = [name, description, type, price, amountinstock, imageurl];
 
     db.query(query, values, (err, result) => {
