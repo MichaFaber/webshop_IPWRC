@@ -21,9 +21,6 @@ if (!fs.existsSync(uploadsDir)) {
 app.use(fileUpload());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(bodyParser.json());
-//app.use(helmet());
-//app.use(cors({  origin: '*',}));
-//app.use(cors());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100 // limit each IP to 100 requests per windowMs
