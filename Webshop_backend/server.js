@@ -186,7 +186,9 @@ app.post('/api/products/create', (req, res) => {
         return res.status(500).json({ error: 'Database error' });
       }
       console.log(result);
-      res.status(201).json(result[0]);
+      db.query ("select * from products where id = ?", [result.insertId], (products) => {
+        res.status(201).json(products[0]);
+      });
     });
   });
 });
