@@ -54,6 +54,7 @@ app.post('/api/register', async (req, res) => {
       'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?) ',
       [username, hashedPassword, email, role],
       (result)  => {
+        console.log(result)
         res.status(201).send(result[0]);
       } 
     );
