@@ -187,6 +187,7 @@ app.post('/api/products/create', (req, res) => {
       }
       console.log(result.insertId);
       db.query ("select * from products where id = ?", [result.insertId], (products) => {
+        console.log(products)
         res.status(201).json(products[0]);
       });
     });
