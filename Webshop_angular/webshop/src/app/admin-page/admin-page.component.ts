@@ -3,6 +3,7 @@ import { ProductService } from '../products.service';
 import { AuthService } from '../auth.service';
 import { Product } from '../product.model';
 import { NotificationService } from '../notification.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-admin-page',
@@ -23,7 +24,12 @@ export class AdminPageComponent implements OnInit {
   };
   selectedFile: File | null = null;
 
-  constructor(private productService: ProductService, public authService: AuthService, private notificationService: NotificationService ) {}
+  constructor(
+    private productService: ProductService, 
+    public authService: AuthService, 
+    private notificationService: NotificationService,
+    private router: Router,
+  ) {}
 
   ngOnInit(): void {
     this.fetchProducts();
@@ -75,9 +81,9 @@ export class AdminPageComponent implements OnInit {
       this.productService.createProduct(formData).subscribe(
         product => {
           console.log('Product created:', product);
-          this.newProduct.imageurl = `${product.imageurl}`; 
           this.fetchProducts();
           this.clearForm();
+          this.router.navigate(['login'])
         },
         error => {
           console.error('Error creating product:', error);
