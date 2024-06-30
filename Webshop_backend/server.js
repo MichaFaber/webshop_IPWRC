@@ -247,7 +247,7 @@ app.post('/api/checkout', async (req, res) => {
         throw new Error(`Invalid id or quantity for item with id ${id}`);
       }
 
-      db.query('SELECT * FROM products WHERE id = ?', [id], (result) => {
+      db.query('SELECT * FROM products WHERE id = ?', [id], (error ,result) => {
         if (result.length === 0) {
           throw new Error(`Product with id ${id} not found`);
         }
