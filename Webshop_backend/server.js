@@ -42,22 +42,26 @@ const db = mysql.createPool({
 });
 
 // Register new user
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', (req, res) => {
   const { username, password, email, role} = req.body;
   if (!username || !password || !email|| !role) {
     return res.status(400).send('Username, password, and email are required');
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  console.log(hashedPassword)
-  db.query(
-    'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?);',
-    [username, hashedPassword, email, role],
-    (result, error)  => {
-      console.log(result, error)
-      res.status(201).send(result[0]);
-    } 
-  );  
+  bcrypt.hash(password, 10).then(
+    (hashedPassword) => {
+      console.log(hashedPassword)
+      db.query(
+        'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?);',
+        [username, hashedPassword, email, role],
+      (result, error)  => {
+        console.log(result, error)
+        res.status(201).send(result[0]);
+        } 
+      );  
+    }
+  );
+  
 });
 
 // User login
