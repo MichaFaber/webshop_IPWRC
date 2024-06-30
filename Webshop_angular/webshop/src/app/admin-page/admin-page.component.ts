@@ -33,7 +33,7 @@ export class AdminPageComponent implements OnInit {
     this.productService.getProducts().subscribe(data => {
       this.products = data.map(product => ({
         ...product,
-        imageurl: `/backend/api${product.imageurl}`
+        imageurl: `${product.imageurl}`
       }));
     });
   }
@@ -75,7 +75,7 @@ export class AdminPageComponent implements OnInit {
       this.productService.createProduct(formData).subscribe(
         product => {
           console.log('Product created:', product);
-          this.newProduct.imageurl = `/backend/api${product.imageurl}`; 
+          this.newProduct.imageurl = `${product.imageurl}`; 
           this.fetchProducts();
           this.clearForm();
         },
