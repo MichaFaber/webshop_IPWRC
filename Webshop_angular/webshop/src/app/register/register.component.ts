@@ -18,8 +18,13 @@ export class RegisterComponent {
   
   register() {
     console.log('Registering with role:', this.role);
-    this.authService.register(this.username, this.password, this.email, this.role).subscribe((response) => {
-      console.log(response) 
+    this.authService.register(this.username, this.password, this.email, this.role).subscribe({
+      complete: () => {
+        this.router.navigate(['login']);
+      },
+      error: () => {
+        alert('Registration failed');
+      }
     });
   }
 }
