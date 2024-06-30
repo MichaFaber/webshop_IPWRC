@@ -185,14 +185,11 @@ app.post('/api/products/create', (req, res) => {
         console.error('Error inserting product:', err);
         return res.status(500).json({ error: 'Database error' });
       }
-      console.log(result.insertId);
-      db.query(`SELECT * FROM products WHERE id = ${[result.insertId]}`, (products) => {
-        console.log(products)
-        res.status(201).json(products[0]);
+      res.status(201).json({message: 'Ok'});
+      
       });
     });
   });
-});
 
 // Update a single product
 app.put('/api/products/:id', (req, res) => {
