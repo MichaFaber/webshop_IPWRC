@@ -185,7 +185,7 @@ app.post('/api/products/create', (req, res) => {
         console.error('Error inserting product:', err);
         return res.status(500).json({ error: 'Database error' });
       }
-      console.log(result);
+      console.log(result.insertId);
       db.query ("select * from products where id = ?", [result.insertId], (products) => {
         res.status(201).json(products[0]);
       });
