@@ -236,7 +236,7 @@ app.post('/api/checkout', async (req, res) => {
   }
 
   try {
-    await db.query('BEGIN'); // Start transaction
+    db.query('BEGIN'); // Start transaction
     const boughtItems = [];
 
     for (const item of items) {
@@ -247,27 +247,29 @@ app.post('/api/checkout', async (req, res) => {
         throw new Error(`Invalid id or quantity for item with id ${id}`);
       }
 
-      const result = await db.query('SELECT * FROM products WHERE id = ?', [id]);
-      if (result.length === 0) {
-        throw new Error(`Product with id ${id} not found`);
+      db.query('SELECT * FROM products WHERE id = ?', [id], (result) => {
+        if (result.length === 0) {
+          throw new Error(`Product with id ${id} not found`);
+        }
+  
+        const newQuantity = result[0].amountinstock - quantity;
+        if (newQuantity < 0) {
+          throw new Error(`Not enough stock for product with id ${id}`);
+        }
+        db.query('UPDATE products SET amountinstock = ? WHERE id = ?', [newQuantity, id], ()=>{
+          boughtItems.push({
+            ...result[0],
+            quantity
+          });
+        });
       }
-
-      const newQuantity = result[0].amountinstock - quantity;
-      if (newQuantity < 0) {
-        throw new Error(`Not enough stock for product with id ${id}`);
-      }
-
-      await db.query('UPDATE products SET amountinstock = ? WHERE id = ?', [newQuantity, id]);
-      boughtItems.push({
-        ...result[0],
-        quantity
-      });
+      );
     }
 
-    await db.query('COMMIT'); // Commit the transaction
+    db.query('COMMIT'); // Commit the transaction
     res.status(200).json({ message: 'Checkout successful', boughtItems });
   } catch (error) {
-    await db.query('ROLLBACK'); // Rollback the transaction in case of error
+    db.query('ROLLBACK'); // Rollback the transaction in case of error
     console.error('Checkout error:', error);
     res.status(500).json({ error: 'Checkout failed', details: error.message });
   }
