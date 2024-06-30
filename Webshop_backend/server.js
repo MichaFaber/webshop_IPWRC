@@ -236,7 +236,6 @@ app.post('/api/checkout', async (req, res) => {
   }
 
   try {
-    db.query('BEGIN'); // Start transaction
     const boughtItems = [];
 
     for (const item of items) {
@@ -266,10 +265,9 @@ app.post('/api/checkout', async (req, res) => {
       );
     }
 
-    db.query('COMMIT'); // Commit the transaction
+    
     res.status(200).json({ message: 'Checkout successful', boughtItems });
   } catch (error) {
-    db.query('ROLLBACK'); // Rollback the transaction in case of error
     console.error('Checkout error:', error);
     res.status(500).json({ error: 'Checkout failed', details: error.message });
   }
