@@ -51,10 +51,10 @@ app.post('/api/register', async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   try {
     db.query(
-      'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?)',
+      'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?) ',
       [username, hashedPassword, email, role],
       (result)  => {
-        res.status(201).send(result);
+        res.status(201).send(result[0]);
       } 
     );
   } catch (error) {
