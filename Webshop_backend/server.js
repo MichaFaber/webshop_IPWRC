@@ -4,7 +4,7 @@ const cors = require('cors');
 const fs = require('fs')
 const fileUpload = require('express-fileupload')
 const path = require('path')
-const mysql = require('mysql2')
+const mysql = require('mysql2/promise')
 const bcrypt = require('bcryptjs');
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit');
@@ -50,11 +50,13 @@ app.post('/api/register', async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
   try {
-    const result = await db.query(
+    db.query(
       'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?) RETURNING *',
-      [username, hashedPassword, email, role]
+      [username, hashedPassword, email, role],
+      (result)  => {
+        res.status(201).send(result[0]);
+      } 
     );
-    res.status(201).send(result[0]);
   } catch (error) {
     console.error('Error registering user:', error);
     res.status(500).send('Internal Server Error');
