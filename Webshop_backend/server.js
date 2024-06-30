@@ -175,7 +175,7 @@ app.post('/api/products/create', (req, res) => {
       return res.status(500).json({ error: 'Failed to upload file' });
     }
 
-    const imageurl = `http://localhost:3000/uploads/${imageFile.name}`;
+    const imageurl = `/uploads/${imageFile.name}`;
 
     const query = 'INSERT INTO products (name, description, type, price, amountinstock, imageurl) VALUES (?, ?, ?, ?, ?, ?) RETURNING *';
     const values = [name, description, type, price, amountinstock, imageurl];
