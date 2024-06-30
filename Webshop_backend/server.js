@@ -50,19 +50,14 @@ app.post('/api/register', async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
   console.log(hashedPassword)
-  try {
-    db.query(
-      'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?);',
-      [username, hashedPassword, email, role],
-      (result, error)  => {
-        console.log(result, error)
-        res.status(201).send(result[0]);
-      } 
-    );
-  } catch (error) {
-    console.error('Error registering user:', error);
-    res.status(500).send('Internal Server Error');
-  }
+  db.query(
+    'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?);',
+    [username, hashedPassword, email, role],
+    (result, error)  => {
+      console.log(result, error)
+      res.status(201).send(result[0]);
+    } 
+  );  
 });
 
 // User login
