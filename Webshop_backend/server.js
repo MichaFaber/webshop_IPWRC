@@ -9,9 +9,8 @@ const bcrypt = require('bcryptjs');
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
-//const { jwtSecret } = require('./config.js')
-const jwtSecret 
-='41cc361b3f9ee6d6c955b5f68c5e6bb28750a1b064ff7739e81ca426d320112d';
+require('dotenv').config();
+const jwtSecret = process.env.secret;
 const app = express();
 const port = 3000;
 

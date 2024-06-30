@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@auth0/angular-jwt": "^5.2.0"
+    "@auth0/angular-jwt": "^5.2.0",
+    "dotenv": "^16.4.5"
   }
 }
